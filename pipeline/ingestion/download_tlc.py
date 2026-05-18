@@ -1,12 +1,9 @@
 import requests, os, pandas as pd
 from pathlib import Path
 
-# Periode: Jan 2023 - Mar 2026 (39 bulan)
+# Periode: Jan25-des25
 MONTHS = {
-    2023: range(1, 13),
-    2024: range(1, 13),
     2025: range(1, 13),
-    2026: range(1, 4),   # Jan-Mar 2026
 }
 
 COLS_YELLOW = [
