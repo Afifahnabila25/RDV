@@ -2,19 +2,15 @@ import requests
 import pandas as pd
 from pathlib import Path
 
-# ── Konfigurasi periode (sesuaikan dengan MONTHS di download_tlc.py) ──
 START_DATE = '2025-01-01'
 END_DATE   = '2025-12-31'
-YEARS      = 2025
+YEARS      = [2025]
 
-# ── Output folder ──
 OUTPUT_DIR = Path('data/raw/external')
 OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
 
-# ══════════════════════════════════════════════════
 # 1. FETCH WEATHER — Open-Meteo Historical API
-# ══════════════════════════════════════════════════
 def fetch_weather():
     out = OUTPUT_DIR / 'weather.parquet'
     if out.exists():
@@ -25,7 +21,7 @@ def fetch_weather():
 
     url = 'https://archive-api.open-meteo.com/v1/archive'
     params = {
-        'latitude': 40.7128,        # NYC
+        'latitude': 40.7128,
         'longitude': -74.0060,
         'start_date': START_DATE,
         'end_date': END_DATE,
@@ -53,9 +49,7 @@ def fetch_weather():
     print(f'[OK] {len(df):,} baris cuaca | weather.parquet')
 
 
-# ══════════════════════════════════════════════════
 # 2. FETCH HOLIDAYS — Nager.Date API
-# ══════════════════════════════════════════════════
 def fetch_holidays():
     out = OUTPUT_DIR / 'holidays.parquet'
     if out.exists():
@@ -84,7 +78,6 @@ def fetch_holidays():
     print(f'[OK] {len(df):,} total hari libur | holidays.parquet')
 
 
-# ── Run langsung jika dieksekusi sendiri ──
 if __name__ == '__main__':
     fetch_weather()
     fetch_holidays()

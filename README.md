@@ -116,6 +116,26 @@ Output: jumlah file, ukuran, dan sampel isi data yang sudah ter-download.
 
 ---
 
+## Menjalankan Pipeline Cleaning
+
+Jalankan cleaning TLC dan external data:
+```bash
+python pipeline/cleaning/flow_cleaning.py
+```
+
+Output utama ada di folder `data/clean/`.
+
+## Menjalankan Pipeline dari Awal
+
+Untuk menjalankan ingestion lalu cleaning secara berurutan:
+```bash
+python pipeline/pipeline.py
+```
+
+Urutan proses: download/fetch data mentah -> cleaning data TLC dan external.
+
+---
+
 ## 📊 Menjalankan Dashboard Streamlit
 
 Pastikan `data/final/warehouse.duckdb` sudah tersedia (dibuat oleh tim Storage/Ana).
