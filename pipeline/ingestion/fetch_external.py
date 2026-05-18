@@ -3,9 +3,9 @@ import pandas as pd
 from pathlib import Path
 
 # ── Konfigurasi periode (sesuaikan dengan MONTHS di download_tlc.py) ──
-START_DATE = '2023-01-01'
-END_DATE   = '2026-03-31'
-YEARS      = [2023, 2024, 2025, 2026]
+START_DATE = '2025-01-01'
+END_DATE   = '2025-12-31'
+YEARS      = 2025
 
 # ── Output folder ──
 OUTPUT_DIR = Path('data/raw/external')
