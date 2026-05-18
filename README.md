@@ -128,12 +128,26 @@ Output utama ada di folder `data/clean/`.
 
 ## Menjalankan Pipeline dari Awal
 
-Untuk menjalankan ingestion lalu cleaning secara berurutan:
+Untuk menjalankan ingestion, cleaning, lalu modelling secara berurutan:
 ```bash
 python pipeline/pipeline.py
 ```
 
-Urutan proses: download/fetch data mentah -> cleaning data TLC dan external.
+Urutan proses: download/fetch data mentah -> cleaning data TLC dan external -> build warehouse DuckDB.
+
+---
+
+## Isi Warehouse DuckDB
+
+File `data/final/warehouse.duckdb` dibangun oleh `pipeline/modelling/build_warehouse.py` dengan model star schema. Tabel utama berisi transaksi perjalanan taxi, sedangkan tabel dimensi menyimpan konteks lokasi, waktu, cuaca, dan jenis taxi.
+
+| Tabel | Tipe | Isi Utama | Deskripsi Singkat |
+|---|---|---|---|
+| `fact_trips` | Fact table | `trip_id`, `trip_date`, `pickup_hour`, `PULocationID`, `DOLocationID`, `taxi_type`, `fare_amount`, `tip_amount`, `total_amount`, `trip_distance`, `duration_minutes`, `payment_type`, `passenger_count` | Tabel fakta utama berisi seluruh trip Yellow dan Green Taxi yang sudah dibersihkan. Dipakai untuk analisis jumlah trip, revenue, tip, jarak, durasi, pembayaran, dan penumpang. |
+| `dim_location` | Dimension table | `location_id`, `borough`, `zone_name`, `service_zone` | Lookup zona NYC TLC dari `data/raw/taxi_zone_lookup.csv`. Dipakai untuk menghubungkan pickup/dropoff location ID ke borough dan nama zona. |
+| `dim_time` | Dimension table | `date`, `year`, `month`, `day`, `day_of_week`, `day_name`, `is_weekend`, `is_holiday`, `hour` | Dimensi kalender harian dari tanggal trip. Menyediakan atribut waktu, flag weekend, dan flag hari libur nasional AS. |
+| `dim_weather` | Dimension table | `date`, `temp_mean_c`, `temp_max`, `temp_min`, `precipitation`, `weathercode`, `is_rainy`, `is_snowy`, `weather_category` | Data cuaca harian NYC dari Open-Meteo. Dipakai untuk menganalisis hubungan cuaca dengan demand, revenue, dan pola perjalanan taxi. |
+| `dim_taxi_type` | Dimension table | `taxi_type`, `description`, `coverage_area` | Metadata jenis taxi, yaitu Yellow Cab dan Green Cab, termasuk deskripsi area operasionalnya. |
 
 ---
 

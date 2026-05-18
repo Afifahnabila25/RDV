@@ -24,6 +24,7 @@ def run_flow(relative_path: str):
 def main():
     run_flow("ingestion/flow_ingestion.py")
     run_flow("cleaning/flow_cleaning.py")
+    run_flow("modelling/build_warehouse.py")
 
 
 if __name__ == "__main__":
