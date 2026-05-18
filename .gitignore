@@ -2,4 +2,14 @@ data/
 __pycache__/ 
 *.pyc 
 .prefect/ 
+
+# Data folders
+data/raw/
+data/clean/
+data/final/
+
+# Python
+__pycache__/
+*.py[cod]
 venv/
+.env

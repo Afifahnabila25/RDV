@@ -10,26 +10,54 @@
 
 ```
 RDV/
-├── data/
-│   ├── raw/
-│   │   ├── yellow/        # Parquet Yellow Taxi (tidak di-push ke GitHub)
-│   │   ├── green/         # Parquet Green Taxi (tidak di-push ke GitHub)
-│   │   └── external/      # Data cuaca & hari libur
-│   └── final/
-│       └── warehouse.duckdb
-├── pipeline/
-│   └── ingestion/
-│       ├── download_tlc.py       # Download dataset TLC dari NYC
-│       ├── fetch_external.py     # Download cuaca & hari libur
-│       ├── flow_ingestion.py     # Prefect flow (orkestrasi pipeline)
-│       └── verify_download.py    # Verifikasi hasil download
-├── dashboard/
-│   ├── app.py                    # Entry point Streamlit
+│
+├── dashboard/                          # Step 5 — Streamlit Dashboard 
+│   ├── app.py                          # Entry point utama Streamlit
 │   └── pages/
-│       ├── overview.py
-│       ├── revenue_region.py
-│       └── time_external.py
+│       ├── overview.py                 # Halaman ringkasan & KPI
+│       ├── revenue_region.py           # Halaman peta choropleth & analisis zona
+│       └── time_external.py            # Halaman heatmap, cuaca & hari libur
+│
+├── pipeline/
+│   ├── ingestion/                      # Step 1 — Data Ingestion 
+│   │   ├── download_tlc.py             # Download Yellow & Green Taxi dari NYC TLC
+│   │   ├── fetch_external.py           # Fetch cuaca (Open-Meteo) & holiday (Nager.Date)
+│   │   ├── flow_ingestion.py           # Prefect flow — orkestrasi & scheduling
+│   │   └── verify_download.py          # Verifikasi kelengkapan file hasil download
+│   │
+│   ├── cleaning/                       # Step 2 — Preprocessing & Cleaning 
+│   │   ├── clean_tlc.py                # Cleaning Yellow & Green Taxi (anomali + derived columns)
+│   │   └── clean_external.py           # Cleaning data cuaca & hari libur
+│   │
+│   └── modelling/                      # Step 3 — Storage & Data Modelling 
+│       └── build_warehouse.py          # Bangun star schema di DuckDB (fact + 4 dim tables)
+│
+├── analysis/                           # Step 4 — Analytical Queries 
+│   └── run_analysis.py                 # Buat semua analytical views di warehouse.duckdb
+│
+├── data/
+│   ├── raw/                            # Output Step 1 — data mentah (di-gitignore)
+│   │   ├── yellow/                     # yellow_YYYY_MM.parquet (39 file)
+│   │   ├── green/                      # green_YYYY_MM.parquet (39 file)
+│   │   └── external/
+│   │       ├── weather.csv
+│   │       └── holidays.json
+│   │
+│   ├── clean/                          # Output Step 2 — data bersih (di-gitignore)
+│   │   ├── yellow_clean.parquet
+│   │   ├── green_clean.parquet
+│   │   ├── weather_clean.parquet
+│   │   └── holidays_clean.parquet
+│   │
+│   └── final/                          # Output Step 3 — database warehouse (di-gitignore)
+│       └── warehouse.duckdb
+│
+├── docs/                               # Dokumentasi proyek
+│   ├── DECISIONS.md                    # Catatan keputusan teknis (threshold, pilihan library, dll.)
+│   └── schema_diagram.png              # Diagram star schema (buat manual / draw.io)
+│
 ├── .gitignore
+├── prefect.yaml                        # Konfigurasi deployment Prefect
 ├── requirements.txt
 └── README.md
 ```
