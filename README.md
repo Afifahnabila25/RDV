@@ -28,6 +28,7 @@ RDV/
 │   ├── cleaning/                       # Step 2 — Preprocessing & Cleaning 
 │   │   ├── clean_tlc.py                # Cleaning Yellow & Green Taxi (anomali + derived columns)
 │   │   └── clean_external.py           # Cleaning data cuaca & hari libur
+│   │   └── flow_cleaning.py            # Run cleaning data (eksternal maupun internal)
 │   │
 │   └── modelling/                      # Step 3 — Storage & Data Modelling 
 │       └── build_warehouse.py          # Bangun star schema di DuckDB (fact + 4 dim tables)
