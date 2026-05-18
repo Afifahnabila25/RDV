@@ -4,7 +4,7 @@ from pathlib import Path
 
 # ── Konfigurasi periode (sesuaikan dengan MONTHS di download_tlc.py) ──
 START_DATE = '2023-01-01'
-END_DATE   = '2025-05-31'
+END_DATE   = '2026-03-31'
 YEARS      = [2023, 2024, 2025, 2026]
 
 # ── Output folder ──
