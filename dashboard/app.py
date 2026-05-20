@@ -1,7 +1,6 @@
-# konfigurasi halaman, koneksi database, sidebar filter, dan navigasi antar halaman
-
 import streamlit as st
-import duckdb, pandas as pd
+import duckdb
+import pandas as pd
 
 st.set_page_config(
     page_title='NYC Taxi Analysis | Kelompok 4',
@@ -9,35 +8,44 @@ st.set_page_config(
     layout='wide'
 )
 
-# Koneksi database (shared, read-only)
+st.markdown("""
+    <style>
+    [data-testid="stMetricValue"] {
+        font-size: 24px !important;
+    }
+    div[data-testid="stBlock"] div[data-testid="element-container"] button {
+        display: none;
+    }
+    </style>
+""", unsafe_allow_html=True)
+
 @st.cache_resource
 def get_con():
-    return duckdb.connect('data/final/warehouse.duckdb',
-                          read_only=True)
+    return duckdb.connect('data/final/warehouse.duckdb', read_only=True)
 
-# Fungsi load data dari view (bisa dipakai Gladys juga)
-@st.cache_data
-def load_view(view_name, filters=''):
-    con = get_con()
-    return con.execute(f'SELECT * FROM {view_name} {filters}').df()
-
-# Sidebar filter
 st.sidebar.title('Filter Dashboard')
-taxi_filter = st.sidebar.multiselect(
-    'Jenis Taksi', ['yellow', 'green'],
-    default=['yellow', 'green']
-)
-year_filter = st.sidebar.multiselect(
-    'Tahun', [2023, 2024, 2025, 2026],
-    default=[2023, 2024, 2025, 2026]
+
+taxi_options = {"Yellow Cab": "yellow", "Green Cab": "green"}
+selected_taxi_labels = st.sidebar.multiselect(
+    'Jenis Taksi', 
+    options=list(taxi_options.keys()), 
+    default=list(taxi_options.keys()),
+    key="global_taxi_select"
 )
 
-# Navigasi halaman
-page = st.sidebar.radio('Halaman', [
+st.session_state['selected_taxis'] = [taxi_options[lbl] for lbl in selected_taxi_labels]
+
+st.sidebar.markdown("---")
+
+page = st.sidebar.radio('Halaman Navigasi', [
     'Overview',
     'Revenue & Region',
     'Time & External'
 ])
+
+if not st.session_state['selected_taxis']:
+    st.warning("Silakan pilih minimal satu Jenis Taksi pada sidebar.")
+    st.stop()
 
 if page == 'Overview':
     exec(open('dashboard/pages/overview.py').read())
