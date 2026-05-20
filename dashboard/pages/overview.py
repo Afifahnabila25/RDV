@@ -4,79 +4,6 @@ import pandas as pd
 import plotly.express as px
 from pathlib import Path
 
-# CSS INJECTION
-st.markdown(
-    """
-<style>
-@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
-
-html, body, [class*="css"], .stApp {
-    font-family: 'Poppins', sans-serif !important;
-    background-color: #EAECF0 !important;
-}
-.main .block-container {
-    background-color: #EAECF0 !important;
-    padding-top: 1.5rem !important;
-    padding-left: 2rem !important;
-    padding-right: 2rem !important;
-}
-
-/* Sidebar */
-[data-testid="stSidebar"] {
-    background-color: #FFFFFF !important;
-    border-right: 1px solid #DDE1E8 !important;
-}
-[data-testid="stSidebar"] p,
-[data-testid="stSidebar"] label,
-[data-testid="stSidebar"] .stMarkdown { font-family: 'Poppins', sans-serif !important; }
-
-/* CARD PUTIH (border container) */
-.st-key-overview_market_share_card,
-.st-key-overview_revenue_growth_card,
-.st-key-overview_fleet_metadata_card,
-[data-testid="stVerticalBlockBorderWrapper"] {
-    background-color: #FFFFFF !important;
-    border-radius: 14px !important;
-    border: 1px solid #E2E6ED !important;
-    box-shadow: none !important;
-    padding: 1.25rem 1.25rem !important;
-}
-
-.st-key-overview_market_share_card [data-testid="stVerticalBlockBorderWrapper"],
-.st-key-overview_revenue_growth_card [data-testid="stVerticalBlockBorderWrapper"],
-.st-key-overview_fleet_metadata_card [data-testid="stVerticalBlockBorderWrapper"] {
-    background-color: #FFFFFF !important;
-    border: none !important;
-    box-shadow: none !important;
-    padding: 0 !important;
-}
-
-.st-key-overview_market_share_card [data-testid="stVerticalBlock"],
-.st-key-overview_revenue_growth_card [data-testid="stVerticalBlock"],
-.st-key-overview_fleet_metadata_card [data-testid="stVerticalBlock"] {
-    background-color: #FFFFFF !important;
-}
-
-/* Typography */
-h1 { font-family: 'Poppins', sans-serif !important; font-weight: 700 !important; color: #1E2A3A !important; font-size: 1.5rem !important; }
-h2, h3 { font-family: 'Poppins', sans-serif !important; color: #1E2A3A !important; }
-.stMarkdown h3 { font-size: 0.95rem !important; font-weight: 600 !important; color: #1E2A3A !important; }
-p, .stMarkdown, .stText, label, .stCaption {
-    font-family: 'Poppins', sans-serif !important;
-}
-
-/* Multiselect */
-[data-testid="stMultiSelect"] span[data-baseweb="tag"] {
-    background-color: #4B7FF2 !important; border-radius: 6px !important;
-}
-hr { border-color: #E2E6ED !important; }
-::-webkit-scrollbar { width: 6px; height: 6px; }
-::-webkit-scrollbar-thumb { background: #C1C8D4; border-radius: 3px; }
-</style>
-""",
-    unsafe_allow_html=True,
-)
-
 # COLOR PALETTE
 WARNA_TAKSI = {"Yellow Cab": "#F8B320", "Green Cab": "#31C28E"}
 WARNA_TREN = ["#4B7FF2"]
@@ -103,36 +30,10 @@ except Exception as e:
     )
     st.stop()
 
-st.sidebar.header("Filter Global")
-taxi_options = {"Yellow Cab": "yellow", "Green Cab": "green"}
-selected_taxi_labels = st.sidebar.multiselect(
-    "Jenis Taksi",
-    options=list(taxi_options.keys()),
-    default=list(taxi_options.keys()),
-    key="ov_taxi",
-)
-selected_taxis = [taxi_options[lbl] for lbl in selected_taxi_labels]
-
-try:
-    available_years = [
-        int(r[0])
-        for r in con.execute(
-            "SELECT DISTINCT year FROM dim_time ORDER BY year"
-        ).fetchall()
-        if r[0] is not None
-    ]
-except:
-    available_years = [2023, 2024, 2025, 2026]
-selected_years = st.sidebar.multiselect(
-    "Tahun", options=available_years, default=available_years, key="ov_year"
-)
-
-if not selected_taxis or not selected_years:
-    st.warning("Silakan pilih minimal satu Jenis Taksi dan satu Tahun pada sidebar.")
-    st.stop()
-
-taxi_str = "('" + "','".join(selected_taxis) + "')"
-year_str = "(" + ",".join(map(str, selected_years)) + ")"
+# ── Sidebar ───────────────────────────────────────────────────────────────────
+taxi_str = st.session_state.get("taxi_str", "('yellow','green')")
+year_str = st.session_state.get("year_str", "(2025)")
+selected_taxis = [t.strip("'") for t in taxi_str.strip("()").split(",")]
 
 trip_parts = []
 rev_parts = []
@@ -160,39 +61,6 @@ total_trips = kpi_data[0] if kpi_data else 0
 total_revenue = kpi_data[1] if kpi_data else 0
 total_tips = kpi_data[2] if kpi_data else 0
 avg_rev_per_trip = (total_revenue / total_trips) if total_trips > 0 else 0
-
-# KPI CARDS─
-kpi_css = """
-<style>
-.kpi-card {
-    background: #FFFFFF;
-    border-radius: 14px;
-    border: 1px solid #E2E6ED;
-    padding: 1.1rem 1.25rem;
-    width: 100%;
-    box-sizing: border-box;
-    box-shadow: none;
-}
-.kpi-label {
-    font-family: 'Poppins', sans-serif;
-    font-size: 0.68rem;
-    font-weight: 600;
-    color: #9CA3AF;
-    text-transform: uppercase;
-    letter-spacing: 0.07em;
-    margin-bottom: 0.35rem;
-}
-.kpi-value {
-    font-family: 'Poppins', sans-serif;
-    font-size: 1.75rem;
-    font-weight: 700;
-    color: #1E2A3A;
-    line-height: 1.15;
-    margin: 0;
-}
-</style>
-"""
-st.markdown(kpi_css, unsafe_allow_html=True)
 
 col1, col2, col3, col4 = st.columns(4, gap="small")
 kpi_items = [

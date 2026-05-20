@@ -6,86 +6,6 @@ import folium
 from streamlit_folium import st_folium
 from pathlib import Path
 
-# CSS INJECTION
-st.markdown(
-    """
-<style>
-@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0');
-
-html, body, .stApp {
-    font-family: 'Poppins', sans-serif !important;
-    background-color: #EAECF0 !important;
-}
-.main .block-container {
-    background-color: #EAECF0 !important;
-    padding-top: 1.5rem !important;
-    padding-left: 2rem !important;
-    padding-right: 2rem !important;
-}
-
-/* Sidebar */
-[data-testid="stSidebar"] {
-    background-color: #FFFFFF !important;
-    border-right: 1px solid #DDE1E8 !important;
-}
-[data-testid="stSidebar"] p,
-[data-testid="stSidebar"] label,
-[data-testid="stSidebar"] .stMarkdown { font-family: 'Poppins', sans-serif !important; }
-
-/* Card putih */
-.st-key-rr_top_zone_card,
-.st-key-rr_daily_trend_card,
-.st-key-rr_map_card,
-[data-testid="stVerticalBlockBorderWrapper"] {
-    background-color: #FFFFFF !important;
-    border-radius: 14px !important;
-    border: 1px solid #E2E6ED !important;
-    box-shadow: none !important;
-    padding: 1.25rem 1.25rem !important;
-}
-
-.st-key-rr_top_zone_card [data-testid="stVerticalBlockBorderWrapper"],
-.st-key-rr_daily_trend_card [data-testid="stVerticalBlockBorderWrapper"],
-.st-key-rr_map_card [data-testid="stVerticalBlockBorderWrapper"] {
-    background-color: #FFFFFF !important;
-    border: none !important;
-    box-shadow: none !important;
-    padding: 0 !important;
-}
-
-.st-key-rr_top_zone_card [data-testid="stVerticalBlock"],
-.st-key-rr_daily_trend_card [data-testid="stVerticalBlock"],
-.st-key-rr_map_card [data-testid="stVerticalBlock"] {
-    background-color: #FFFFFF !important;
-}
-
-/* Typography */
-h1 { font-family: 'Poppins', sans-serif !important; font-weight: 700 !important; color: #1E2A3A !important; font-size: 1.5rem !important; }
-h2, h3 { font-family: 'Poppins', sans-serif !important; color: #1E2A3A !important; }
-.stMarkdown h3 { font-size: 0.95rem !important; font-weight: 600 !important; color: #1E2A3A !important; }
-[data-testid="stHeading"] h3 { font-size: 0.95rem !important; font-weight: 600 !important; color: #1E2A3A !important; }
-p, div { font-family: 'Poppins', sans-serif !important; }
-
-/* Icon font fix for Streamlit */
-[data-testid="stIcon"],
-[data-testid="stIcon"] span,
-span.material-symbols-outlined,
-span.material-icons {
-    font-family: 'Material Symbols Outlined' !important;
-    font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
-}
-
-/* Multiselect */
-[data-testid="stMultiSelect"] span[data-baseweb="tag"] { background-color: #4B7FF2 !important; border-radius: 6px !important; }
-hr { border-color: #E2E6ED !important; }
-::-webkit-scrollbar { width: 6px; height: 6px; }
-::-webkit-scrollbar-thumb { background: #C1C8D4; border-radius: 3px; }
-</style>
-""",
-    unsafe_allow_html=True,
-)
-
 # COLOR PALETTE
 WARNA_TREN = ["#4B7FF2"]
 
@@ -99,36 +19,10 @@ ROOT = Path(__file__).resolve().parents[2]
 DB_PATH = ROOT / "data" / "final" / "warehouse.duckdb"
 con = duckdb.connect(str(DB_PATH), read_only=True)
 
-st.sidebar.header("Filter Halaman")
-taxi_options = {"Yellow Cab": "yellow", "Green Cab": "green"}
-selected_taxi_labels = st.sidebar.multiselect(
-    "Jenis Taksi",
-    options=list(taxi_options.keys()),
-    default=list(taxi_options.keys()),
-    key="rr_taxi",
-)
-selected_taxis = [taxi_options[lbl] for lbl in selected_taxi_labels]
-
-try:
-    available_years = [
-        int(r[0])
-        for r in con.execute(
-            "SELECT DISTINCT year FROM dim_time ORDER BY year"
-        ).fetchall()
-        if r[0] is not None
-    ]
-except:
-    available_years = [2024, 2025]
-selected_years = st.sidebar.multiselect(
-    "Tahun", options=available_years, default=available_years, key="rr_year"
-)
-
-if not selected_taxis or not selected_years:
-    st.warning("Silakan pilih Jenis Taksi dan Tahun di sidebar.")
-    st.stop()
-
-taxi_str = "('" + "','".join(selected_taxis) + "')"
-year_str = "(" + ",".join(map(str, selected_years)) + ")"
+# ── Sidebar ───────────────────────────────────────────────────────────────────
+taxi_str = st.session_state.get("taxi_str", "('yellow','green')")
+year_str = st.session_state.get("year_str", "(2025)")
+selected_taxis = [t.strip("'") for t in taxi_str.strip("()").split(",")]
 
 query_kpi = f"""
     SELECT COUNT(*) as total_trips, SUM(total_amount) as total_rev, AVG(trip_distance) as avg_dist
@@ -272,30 +166,37 @@ with st.container(border=True, key="rr_daily_trend_card"):
 
 st.markdown("<div style='height:0.5rem'></div>", unsafe_allow_html=True)
 
-with st.container(border=True, key="rr_map_card"):
+with st.container(border=True):
     st.subheader("🗺️ Peta Kepadatan Destinasi/Wilayah NYC Taxi")
-    st.caption("Peta interaktif berbasis koordinat titik lokasi sentral New York.")
+    st.markdown("> *Peta interaktif berbasis koordinat titik lokasi per zona NYC.*")
+
+    # Load koordinat zona
+    import pandas as pd
+    zone_coords = pd.read_csv("data/raw/zone_coords.csv")
+
+    query_map = f"""
+        SELECT f.PULocationID, COUNT(*) as jumlah_trip, SUM(f.total_amount) as total_rev,
+               l.zone_name, l.borough
+        FROM fact_trips f
+        JOIN dim_location l ON f.PULocationID = l.location_id
+        WHERE f.taxi_type IN {taxi_str} AND YEAR(f.trip_date) IN {year_str}
+        GROUP BY f.PULocationID, l.zone_name, l.borough
+    """
+    df_map_data = con.execute(query_map).df()
+    df_map_data = df_map_data.merge(zone_coords, left_on='PULocationID', right_on='location_id', how='left')
+    df_map_data = df_map_data.dropna(subset=['lat', 'lon'])
 
     m = folium.Map(location=[40.7128, -74.0060], zoom_start=11, tiles="cartodbpositron")
 
-    query_map = f"""
-        SELECT PULocationID, COUNT(*) as jumlah_trip 
-        FROM fact_trips 
-        WHERE taxi_type IN {taxi_str} AND YEAR(trip_date) IN {year_str}
-        GROUP BY PULocationID
-    """
-    df_map_data = con.execute(query_map).df()
-
-    for idx, row in df_map_data.head(50).iterrows():
-        lat = 40.7128 + (idx * 0.003 - 0.05)
-        lon = -74.0060 + (idx * -0.001 + 0.04)
+    for _, row in df_map_data.iterrows():
+        radius = min(max(int(row['jumlah_trip']) / 50000, 4), 30)
         folium.CircleMarker(
-            location=[lat, lon],
-            radius=min(max(int(row["jumlah_trip"]) / 5, 5), 25),
-            color="#7C53FA" if row["PULocationID"] % 2 == 0 else "#4B7FF2",
+            location=[row['lat'], row['lon']],
+            radius=radius,
+            color="#E74C3C",
             fill=True,
             fill_opacity=0.6,
-            tooltip=f"ID Lokasi: {int(row['PULocationID'])} | Total Trips: {int(row['jumlah_trip'])}",
+            tooltip=f"Zona: {row['zone_name']} | Borough: {row['borough']} | Trips: {int(row['jumlah_trip']):,} | Revenue: ${row['total_rev']:,.0f}"
         ).add_to(m)
 
     st_folium(m, width=1300, height=500, returned_objects=[])
