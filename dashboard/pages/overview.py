@@ -4,11 +4,22 @@ import pandas as pd
 import plotly.express as px
 from pathlib import Path
 
-# COLOR PALETTE
 WARNA_TAKSI = {"Yellow Cab": "#F8B320", "Green Cab": "#31C28E"}
 WARNA_TREN = ["#4B7FF2"]
 
-st.set_page_config(layout="wide")
+st.markdown("""
+    <style>
+    [data-testid="stSidebarNav"] {
+        display: none !important;
+    }
+    [data-testid="stMetricValue"] {
+        font-size: 24px !important;
+    }
+    div[data-testid="stBlock"] div[data-testid="element-container"] button {
+        display: none;
+    }
+    </style>
+""", unsafe_allow_html=True)
 
 st.title("🚖 NYC Taxi Operations — Executive Overview")
 st.markdown("Ringkasan Eksekutif Kinerja Operasional dan Pendapatan Armada Taxi New York City.")
@@ -16,36 +27,22 @@ st.markdown("Ringkasan Eksekutif Kinerja Operasional dan Pendapatan Armada Taxi 
 ROOT = Path(__file__).resolve().parents[2]
 DB_PATH = ROOT / "data" / "final" / "warehouse.duckdb"
 
-
 def get_connection():
     return duckdb.connect(str(DB_PATH), read_only=True)
-
 
 try:
     con = get_connection()
 except Exception as e:
-    st.error(
-        f"Gagal terhubung ke database. Pastikan data warehouse sudah siap. Error: {e}"
-    )
+    st.error(f"Gagal terhubung ke database. Pastikan data warehouse sudah siap. Error: {e}")
     st.stop()
 
-st.sidebar.header("Filter Global")
-taxi_options = {"Yellow Cab": "yellow", "Green Cab": "green"}
-selected_taxi_labels = st.sidebar.multiselect("Jenis Taksi", options=list(taxi_options.keys()), default=list(taxi_options.keys()), key="ov_taxi")
-selected_taxis = [taxi_options[lbl] for lbl in selected_taxi_labels]
-
-try:
-    available_years = [int(r[0]) for r in con.execute("SELECT DISTINCT year FROM dim_time ORDER BY year").fetchall() if r[0] is not None]
-except:
-    available_years = [2023, 2024, 2025, 2026]
-selected_years = st.sidebar.multiselect("Tahun", options=available_years, default=available_years, key="ov_year")
-
-if not selected_taxis or not selected_years:
-    st.warning("Silakan pilih minimal satu Jenis Taksi dan satu Tahun pada sidebar.")
-    st.stop()
+if 'selected_taxis' in st.session_state and st.session_state['selected_taxis']:
+    selected_taxis = st.session_state['selected_taxis']
+else:
+    selected_taxis = ['yellow', 'green']
 
 taxi_str = "('" + "','".join(selected_taxis) + "')"
-year_str = "(" + ",".join(map(str, selected_years)) + ")"
+year_str = "(2025)"
 
 trip_parts = []
 rev_parts = []
@@ -99,7 +96,7 @@ col_left, col_right = st.columns([1.2, 1.8], gap="small")
 with col_left:
     with st.container(border=True): 
         st.markdown("### 📊 Market Share")
-        st.caption("Proporsi kontribusi pendapatan armada aktif")
+        st.caption("Proporsi kontribusi pendapatan armada aktif (2025)")
         
         query_share = f"""
             SELECT 
@@ -133,7 +130,9 @@ with col_left:
                 showlegend=True,
                 legend=dict(orientation="h", yanchor="bottom", y=-0.2, xanchor="center", x=0.5),
                 margin=dict(t=10, b=10, l=10, r=10),
-                height=320
+                height=320,
+                paper_bgcolor='rgba(0,0,0,0)',
+                plot_bgcolor='rgba(0,0,0,0)'
             )
             st.plotly_chart(fig_donut, use_container_width=True)
         else:
@@ -142,7 +141,7 @@ with col_left:
 with col_right:
     with st.container(border=True):  
         st.markdown("### 📈 Revenue Growth")
-        st.caption("Akumulasi performa tren pendapatan berkala")
+        st.caption("Akumulasi performa tren pendapatan berkala (2025)")
 
         query_monthly = f"""
             SELECT 
@@ -170,7 +169,9 @@ with col_right:
             )
             fig_monthly.update_layout(
                 margin=dict(t=20, b=10, l=10, r=10),
-                height=320
+                height=320,
+                paper_bgcolor='rgba(0,0,0,0)',
+                plot_bgcolor='rgba(0,0,0,0)'
             )
             st.plotly_chart(fig_monthly, use_container_width=True)
         else:

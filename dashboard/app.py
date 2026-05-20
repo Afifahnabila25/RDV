@@ -10,6 +10,9 @@ st.set_page_config(
 
 st.markdown("""
     <style>
+    [data-testid="stSidebarNav"] {
+        display: none !important;
+    }
     [data-testid="stMetricValue"] {
         font-size: 24px !important;
     }
@@ -39,6 +42,7 @@ st.sidebar.markdown("---")
 
 page = st.sidebar.radio('Halaman Navigasi', [
     'Overview',
+    'Prediction',
     'Revenue & Region',
     'Time & External'
 ])
@@ -49,6 +53,8 @@ if not st.session_state['selected_taxis']:
 
 if page == 'Overview':
     exec(open('dashboard/pages/overview.py').read())
+elif page == 'Prediction':
+    exec(open('dashboard/pages/prediction.py').read())
 elif page == 'Revenue & Region':
     exec(open('dashboard/pages/revenue_region.py').read())
 else:
