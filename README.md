@@ -11,8 +11,6 @@
 ```
 RDV/
 │
-├── app.py                              # Entry point utama Streamlit
-│
 ├── dashboard/                          # Step 5 — Streamlit Dashboard
 │   └── pages/
 │       ├── overview.py                 # Halaman ringkasan & KPI
@@ -61,9 +59,18 @@ RDV/
 │   ├── DECISIONS.md                    # Catatan keputusan teknis
 │   └── schema_diagram.png              # Diagram star schema
 │
+├── .streamlit/
+│   └── config.toml                     # Konfigurasi tampilan Streamlit
+│
+├── prefect/                            # Konfigurasi & deployment Prefect
+│
 ├── .gitignore
+├── app.py                              # Entry point utama Streamlit
+├── cek_db.py                           # Script utilitas untuk cek isi warehouse.duckdb
+├── generate_clean_parquet.py           # Script generate ulang parquet bersih
 ├── prefect.yaml                        # Konfigurasi deployment Prefect
 ├── requirements.txt
+├── setup_struktur.sh                   # Script setup struktur folder proyek
 └── README.md
 ```
 
