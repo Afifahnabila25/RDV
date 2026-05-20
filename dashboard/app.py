@@ -1,3 +1,4 @@
+from pathlib import Path
 import streamlit as st
 import duckdb
 import pandas as pd
@@ -24,7 +25,7 @@ st.markdown("""
 
 @st.cache_resource
 def get_con():
-    return duckdb.connect('data/final/warehouse.duckdb', read_only=True)
+    return duckdb.connect(str(Path(__file__).resolve().parents[1] / 'data' / 'final' / 'warehouse.duckdb'), read_only=True)
 
 st.sidebar.title('Filter Dashboard')
 

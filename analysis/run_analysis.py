@@ -146,8 +146,6 @@ con.execute("""
         w.is_rainy,
         w.is_snowy,
         w.temp_mean_c,
-        w.temp_max,
-        w.temp_min,
         w.precipitation,
         w.weathercode,
         COUNT(f.trip_id)                        AS total_trips,
@@ -164,7 +162,7 @@ con.execute("""
     LEFT JOIN fact_trips f ON f.trip_date = w.date
     GROUP BY
         w.date, w.weather_category, w.is_rainy, w.is_snowy,
-        w.temp_mean_c, w.temp_max, w.temp_min,
+        w.temp_mean_c, 
         w.precipitation, w.weathercode
     ORDER BY w.date
 """)
