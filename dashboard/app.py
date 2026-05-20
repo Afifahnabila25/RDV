@@ -52,10 +52,10 @@ if not st.session_state['selected_taxis']:
     st.stop()
 
 if page == 'Overview':
-    exec(open('dashboard/pages/overview.py').read())
+    exec(open('dashboard/pages/overview.py', encoding='utf-8').read())
 elif page == 'Prediction':
-    exec(open('dashboard/pages/prediction.py').read())
+    exec(open('dashboard/pages/prediction.py', encoding='utf-8').read())
 elif page == 'Revenue & Region':
-    exec(open('dashboard/pages/revenue_region.py').read())
+    exec(open('dashboard/pages/revenue_region.py', encoding='utf-8').read())
 else:
-    exec(open('dashboard/pages/time_external.py').read())
+    exec(open('dashboard/pages/time_external.py', encoding='utf-8').read())
