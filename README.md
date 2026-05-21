@@ -113,7 +113,29 @@ Urutan proses yang dijalankan otomatis:
 3. Cleaning & validasi data TLC dan external
 4. Build warehouse DuckDB dengan star schema
 
-### Langkah 3 — Buat Analytical Views
+### Cek Instalasi GeoPandas
+
+Pastikan `geopandas` sudah terinstal sebelum menjalankan langkah berikutnya:
+
+```bash
+python -c "import geopandas"
+```
+
+Jika muncul error, install terlebih dahulu:
+
+```bash
+pip install geopandas
+```
+
+### Langkah 3 — Generate Zone Coordinates
+
+```bash
+python pipeline/generate_zone_coords.py
+```
+
+Menghasilkan data koordinat geografis untuk setiap zona NYC TLC yang dibutuhkan untuk visualisasi peta choropleth di dashboard (wajib dijalankan sebelum analytical views).
+
+### Langkah 4 — Buat Analytical Views
 
 ```bash
 python analysis/run_analysis.py
@@ -121,7 +143,7 @@ python analysis/run_analysis.py
 
 Membuat semua view agregasi yang dibutuhkan dashboard (wajib dijalankan setelah pipeline selesai).
 
-### Langkah 4 — Jalankan Dashboard
+### Langkah 5 — Jalankan Dashboard
 
 ```bash
 streamlit run app.py
