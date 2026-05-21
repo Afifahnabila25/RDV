@@ -234,21 +234,3 @@ con.close()
 print(f"\n{'=' * 60}")
 print(f"  [DONE] Warehouse tersimpan di: {DB_PATH}")
 print(f"{'=' * 60}\n")
-
-# AGG TABLES
-print("\n[6/6] agg_revenue_daily ...")
-con.execute("""
-CREATE OR REPLACE TABLE agg_revenue_daily AS
-SELECT
-    YEAR(f.trip_date)                                           AS year,
-    MONTH(f.trip_date)                                         AS month,
-    f.trip_date                                                AS date,
-    SUM(CASE WHEN f.taxi_type = 'yellow' THEN 1 ELSE 0 END)   AS yellow_trips,
-    SUM(CASE WHEN f.taxi_type = 'green'  THEN 1 ELSE 0 END)   AS green_trips,
-    SUM(CASE WHEN f.taxi_type = 'yellow' THEN f.total_amount ELSE 0 END) AS yellow_revenue,
-    SUM(CASE WHEN f.taxi_type = 'green'  THEN f.total_amount ELSE 0 END) AS green_revenue,
-    SUM(f.tip_amount)                                          AS total_tip
-FROM fact_trips f
-GROUP BY YEAR(f.trip_date), MONTH(f.trip_date), f.trip_date
-""")
-print(f"      [OK] agg_revenue_daily: {con.execute('SELECT COUNT(*) FROM agg_revenue_daily').fetchone()[0]} baris")
