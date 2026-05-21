@@ -191,13 +191,20 @@ with col_right:
     if not df_monthly.empty:
         df_monthly['Periode'] = df_monthly['year'].astype(str) + '-' + df_monthly['month'].astype(str).str.zfill(2)
 
+        if "yellow" in selected_taxis and "green" in selected_taxis:
+            rev_color = "#4B7FF2"
+        elif "yellow" in selected_taxis:
+            rev_color = "#F8B320"
+        else:
+            rev_color = "#31C28E"
+
         fig_monthly = px.bar(
             df_monthly,
             x='Periode',
             y='revenue',
             labels={'revenue': 'Revenue ($)', 'Periode': 'Bulan'},
             text_auto='.2s',
-            color_discrete_sequence=WARNA_TREN
+            color_discrete_sequence=[rev_color]
         )
 
         fig_monthly.update_layout(
@@ -243,20 +250,14 @@ with st.container(border=True, key="overview_trip_trend_card"):
                 + df_trip_monthly["month"].astype(str).str.zfill(2)
             )
 
-            trip_view = st.radio(
-                "Tampilkan:",
-                ["Semua", "Yellow Cab", "Green Cab"],
-                horizontal=True,
-                key="trip_trend_view"
-            )
-
-            if trip_view == "Yellow Cab":
-                y_col, color, y_label = "yellow_trips", "#F8B320", "Yellow Cab Trips"
-            elif trip_view == "Green Cab":
-                y_col, color, y_label = "green_trips", "#31C28E", "Green Cab Trips"
-            else:
+            # Tentukan kolom & warna berdasarkan filter global
+            if "yellow" in selected_taxis and "green" in selected_taxis:
                 y_col, color, y_label = "total_trips", "#4B7FF2", "Total Trips"
-
+            elif "yellow" in selected_taxis:
+                y_col, color, y_label = "yellow_trips", "#F8B320", "Yellow Cab Trips"
+            else:
+                y_col, color, y_label = "green_trips", "#31C28E", "Green Cab Trips"
+                
             import plotly.graph_objects as go
             fig_trip = go.Figure()
             fig_trip.add_trace(go.Bar(

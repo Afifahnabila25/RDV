@@ -129,31 +129,30 @@ hr { border-color: #E2E6ED !important; }
 )
 
 # ── Filter Global (Sidebar) ───────────────────────────────────────────────────
-# ── Filter Global (Sidebar) ───────────────────────────────────────────────────
 st.sidebar.title("Filter Dashboard")
 
-taxi_options = {"Yellow Cab": "yellow", "Green Cab": "green"}
-selected_taxi_labels = st.sidebar.multiselect(
+taxi_choice = st.sidebar.radio(
     "Jenis Taksi",
-    options=list(taxi_options.keys()),
-    default=list(taxi_options.keys()),
-    key="global_taxi",
+    options=["All", "Yellow Cab", "Green Cab"],
+    index=0,
+    key="global_taxi"
 )
 
-selected_taxis = [taxi_options[l] for l in selected_taxi_labels]
+if taxi_choice == "All":
+    selected_taxis = ["yellow", "green"]
+elif taxi_choice == "Yellow Cab":
+    selected_taxis = ["yellow"]
+else:
+    selected_taxis = ["green"]
 
 # Simpan KEDUA format — taxi_str untuk halaman lain, selected_taxis untuk overview
-st.session_state["taxi_str"]      = "('" + "','".join(selected_taxis) + "')"
+st.session_state["taxi_str"]       = "('" + "','".join(selected_taxis) + "')"
 st.session_state["selected_taxis"] = selected_taxis
 
 # Tahun hardcode 2025 — tidak perlu filter
 st.session_state["year_str"]       = "(2025)"
 st.session_state["selected_years"] = [2025]
 
-if not selected_taxi_labels:
-    st.warning("Pilih minimal satu Jenis Taksi.")
-    st.stop()
-    
 # ── Navigasi ──────────────────────────────────────────────────────────────────
 pg = st.navigation(
     [

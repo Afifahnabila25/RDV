@@ -314,15 +314,13 @@ with col2:
         3
     )
 
-taxi_toggle = st.radio(
-    "Tampilkan prediksi:",
-    [
-        "🚕 Yellow Cab",
-        "🚖 Green Cab",
-        "🚕🚖 Semua"
-    ],
-    horizontal=True
-)
+# Tentukan taxi_toggle dari filter global
+if "yellow" in taxi_str and "green" in taxi_str:
+    taxi_toggle = "🚕🚖 Semua"
+elif "yellow" in taxi_str:
+    taxi_toggle = "🚕 Yellow Cab"
+else:
+    taxi_toggle = "🚖 Green Cab"
 
 with st.spinner("Mengambil cuaca..."):
 
