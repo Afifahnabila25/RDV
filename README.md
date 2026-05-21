@@ -33,9 +33,11 @@ RDV/
 │   ├── modelling/                      # Step 3 — Storage & Data Modelling
 │   │   └── build_warehouse.py          # Bangun star schema di DuckDB (fact + dim tables)
 │   │
+│   └── generate_zone_coords.py                     
 │   └── pipeline.py                     # Orchestrator utama (ingestion → cleaning → modelling)
 │
 ├── analysis/                           # Step 4 — Analytical Queries
+│   └── predictive_analysis.py          # Buat prediksi  hasil analisis
 │   └── run_analysis.py                 # Buat semua analytical views di warehouse.duckdb
 │
 ├── data/
