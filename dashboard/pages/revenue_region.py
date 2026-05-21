@@ -4,12 +4,10 @@ import pandas as pd
 import plotly.express as px
 from pathlib import Path
 
-st.set_page_config(
-    layout="wide",
-    initial_sidebar_state="expanded"
-)
+st.set_page_config(layout="wide", initial_sidebar_state="expanded")
 
-st.markdown("""
+st.markdown(
+    """
 <style>
 html, body, [class*="css"]{background:#ffffff !important;}
 [data-testid="stAppViewContainer"]{background:#ffffff !important;}
@@ -26,7 +24,9 @@ div[data-testid="stExpander"]{background:#ffffff !important;border:none !importa
 div[data-testid="stDataFrame"]{background:#ffffff !important;border:none !important;box-shadow:none !important;}
 iframe{border-radius:12px !important;}
 </style>
-""", unsafe_allow_html=True)
+""",
+    unsafe_allow_html=True,
+)
 
 st.title("🗺️ Revenue & Region Analysis")
 st.markdown(
@@ -34,18 +34,20 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-ROOT    = Path(__file__).resolve().parents[2]
+ROOT = Path(__file__).resolve().parents[2]
 DB_PATH = ROOT / "data" / "final" / "warehouse.duckdb"
-con     = duckdb.connect(str(DB_PATH), read_only=True)
+con = duckdb.connect(str(DB_PATH), read_only=True)
 
 # ── Filter dari session_state ─────────────────────────────────────────────────
-if 'selected_taxis' in st.session_state and st.session_state['selected_taxis']:
-    selected_taxis = [t.lower().replace(' cab', '') for t in st.session_state['selected_taxis']]
+if "selected_taxis" in st.session_state and st.session_state["selected_taxis"]:
+    selected_taxis = [
+        t.lower().replace(" cab", "") for t in st.session_state["selected_taxis"]
+    ]
 else:
-    selected_taxis = ['yellow', 'green']
+    selected_taxis = ["yellow", "green"]
 
-if 'selected_years' in st.session_state and st.session_state['selected_years']:
-    selected_years = st.session_state['selected_years']
+if "selected_years" in st.session_state and st.session_state["selected_years"]:
+    selected_years = st.session_state["selected_years"]
 else:
     selected_years = [2024, 2025]
 
@@ -73,17 +75,24 @@ with col1:
         df_borough.columns = [c.lower() for c in df_borough.columns]
         if not df_borough.empty:
             fig_borough = px.bar(
-                df_borough, x="total_revenue", y="borough", orientation="h",
+                df_borough,
+                x="total_revenue",
+                y="borough",
+                orientation="h",
                 labels={"total_revenue": "Total Pendapatan ($)", "borough": "Wilayah"},
-                color="total_revenue", color_continuous_scale="Blues", text_auto="$.2s"
+                color="total_revenue",
+                color_continuous_scale="Blues",
+                text_auto="$.2s",
             )
             fig_borough.update_layout(
                 margin=dict(t=10, b=10, l=10, r=10),
-                paper_bgcolor="#ffffff", plot_bgcolor="#ffffff",
+                paper_bgcolor="#ffffff",
+                plot_bgcolor="#ffffff",
                 font=dict(family="Poppins, sans-serif", color="#111827"),
                 xaxis=dict(gridcolor="#E5E7EB"),
                 yaxis=dict(autorange="reversed"),
-                showlegend=False, height=350
+                showlegend=False,
+                height=350,
             )
             st.plotly_chart(fig_borough, use_container_width=True)
     except Exception as e:
@@ -107,19 +116,25 @@ with col2:
         """).df()
         if not df_top_zone.empty:
             fig_top = px.bar(
-                df_top_zone, x="total_revenue", y="zone_name", orientation="h",
-                color="total_revenue", color_continuous_scale="Blues",
+                df_top_zone,
+                x="total_revenue",
+                y="zone_name",
+                orientation="h",
+                color="total_revenue",
+                color_continuous_scale="Blues",
                 labels={"total_revenue": "Total Revenue ($)", "zone_name": "Zona"},
                 hover_data={"borough": True, "total_trips": ":,"},
-                text_auto="$.2s"
+                text_auto="$.2s",
             )
             fig_top.update_layout(
                 yaxis={"categoryorder": "total ascending"},
                 margin=dict(t=10, b=10, l=10, r=10),
-                paper_bgcolor="#ffffff", plot_bgcolor="#ffffff",
+                paper_bgcolor="#ffffff",
+                plot_bgcolor="#ffffff",
                 font=dict(family="Poppins, sans-serif", color="#111827"),
                 xaxis=dict(gridcolor="#E5E7EB"),
-                showlegend=False, height=350
+                showlegend=False,
+                height=350,
             )
             st.plotly_chart(fig_top, use_container_width=True)
     except Exception as e:
@@ -135,7 +150,9 @@ st.caption("Ukuran titik menunjukkan jumlah trip yang berangkat dari tiap zona."
 try:
     zone_coords_path = ROOT / "data" / "raw" / "zone_coords.csv"
     zone_coords = pd.read_csv(zone_coords_path)
-    df_loc = con.execute("SELECT location_id, zone_name, borough FROM dim_location").df()
+    df_loc = con.execute(
+        "SELECT location_id, zone_name, borough FROM dim_location"
+    ).df()
 
     # Tentukan warna berdasarkan filter
     if len(selected_taxis) == 2:  # All
@@ -158,24 +175,31 @@ try:
 
     if not df_geo.empty:
         fig_map = px.scatter_mapbox(
-            df_geo, lat="lat", lon="lon",
+            df_geo,
+            lat="lat",
+            lon="lon",
             size="total_trips",
             hover_name="zone_name",
             hover_data={"borough": True, "total_trips": ":,"},
-            zoom=9.5, mapbox_style="carto-positron"
+            zoom=9.5,
+            mapbox_style="carto-positron",
         )
         fig_map.update_traces(marker=dict(color=map_color))
         fig_map.update_layout(
             margin=dict(t=10, b=10, l=10, r=10),
-            paper_bgcolor="#ffffff", plot_bgcolor="#ffffff",
+            paper_bgcolor="#ffffff",
+            plot_bgcolor="#ffffff",
             font=dict(family="Poppins, sans-serif", color="#111827"),
-            height=500
+            height=500,
         )
-        st.plotly_chart(fig_map, use_container_width=True,
-                       config={"scrollZoom": True, "displayModeBar": False})
+        st.plotly_chart(
+            fig_map,
+            use_container_width=True,
+            config={"scrollZoom": True, "displayModeBar": False},
+        )
 except Exception as e:
     st.error(f"Gagal memuat peta: {e}")
-    
+
 st.divider()
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -200,40 +224,50 @@ try:
         col5, col6 = st.columns([1, 1], gap="large")
         with col5:
             fig_yg = px.bar(
-                df_ygrev, x="Jenis Taksi", y="avg_revenue_per_trip",
+                df_ygrev,
+                x="Jenis Taksi",
+                y="avg_revenue_per_trip",
                 color="Jenis Taksi",
                 color_discrete_map={"Yellow Cab": "#F8B320", "Green Cab": "#31C28E"},
                 labels={"avg_revenue_per_trip": "Avg Revenue ($)"},
-                text_auto=".2f"
+                text_auto=".2f",
             )
             fig_yg.update_layout(
                 title="Rata-rata Revenue per Trip",
                 margin=dict(t=30, b=10, l=10, r=10),
-                paper_bgcolor="#ffffff", plot_bgcolor="#ffffff",
+                paper_bgcolor="#ffffff",
+                plot_bgcolor="#ffffff",
                 font=dict(family="Poppins, sans-serif", color="#111827"),
                 yaxis=dict(gridcolor="#E5E7EB"),
-                showlegend=False, height=300
+                showlegend=False,
+                height=300,
             )
-            st.plotly_chart(fig_yg, use_container_width=True,
-                           config={"displayModeBar": False})
+            st.plotly_chart(
+                fig_yg, use_container_width=True, config={"displayModeBar": False}
+            )
         with col6:
             fig_dist = px.bar(
-                df_ygrev, x="Jenis Taksi", y="avg_distance",
+                df_ygrev,
+                x="Jenis Taksi",
+                y="avg_distance",
                 color="Jenis Taksi",
                 color_discrete_map={"Yellow Cab": "#F8B320", "Green Cab": "#31C28E"},
                 labels={"avg_distance": "Avg Jarak (mil)"},
-                text_auto=".2f"
+                text_auto=".2f",
             )
             fig_dist.update_layout(
                 title="Rata-rata Jarak Perjalanan",
                 margin=dict(t=30, b=10, l=10, r=10),
-                paper_bgcolor="#ffffff", plot_bgcolor="#ffffff",
+                paper_bgcolor="#ffffff",
+                plot_bgcolor="#ffffff",
                 font=dict(family="Poppins, sans-serif", color="#111827"),
                 yaxis=dict(gridcolor="#E5E7EB"),
-                showlegend=False, height=300
+                showlegend=False,
+                height=300,
             )
-            st.plotly_chart(fig_dist, use_container_width=True,
-                           config={"displayModeBar": False})
+            st.plotly_chart(
+                fig_dist, use_container_width=True, config={"displayModeBar": False}
+            )
 except Exception as e:
     st.error(f"Gagal memuat perbandingan Yellow vs Green: {e}")
 
