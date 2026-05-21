@@ -66,8 +66,6 @@ RDV/
 │
 ├── .gitignore
 ├── app.py                              # Entry point utama Streamlit
-├── cek_db.py                           # Script utilitas untuk cek isi warehouse.duckdb
-├── generate_clean_parquet.py           # Script generate ulang parquet bersih
 ├── prefect.yaml                        # Konfigurasi deployment Prefect
 ├── requirements.txt
 ├── setup_struktur.sh                   # Script setup struktur folder proyek
