@@ -6,7 +6,8 @@ from pathlib import Path
 
 st.set_page_config(layout="wide")
 
-st.markdown("""
+st.markdown(
+    """
 <style>
 .stApp {
     background-color: white !important;
@@ -39,29 +40,35 @@ div[data-testid="stVerticalBlock"] {
     padding: 0 !important;
 }
 </style>
-""", unsafe_allow_html=True)
+""",
+    unsafe_allow_html=True,
+)
 
 WARNA_TAKSI = {"Yellow Cab": "#F8B320", "Green Cab": "#31C28E"}
 WARNA_TREN = ["#4B7FF2"]
 
 st.title("🚖 NYC Taxi Operations — Executive Overview")
-st.markdown("Ringkasan Eksekutif Kinerja Operasional dan Pendapatan Armada Taxi New York City.")
+st.markdown(
+    "Ringkasan Eksekutif Kinerja Operasional dan Pendapatan Armada Taxi New York City."
+)
 
 ROOT = Path(__file__).resolve().parents[2]
 DB_PATH = ROOT / "data" / "final" / "warehouse.duckdb"
 
+
 def get_connection():
     return duckdb.connect(str(DB_PATH), read_only=True)
 
+
 con = get_connection()
 
-if 'selected_taxis' in st.session_state and st.session_state['selected_taxis']:
-    selected_taxis = st.session_state['selected_taxis']
+if "selected_taxis" in st.session_state and st.session_state["selected_taxis"]:
+    selected_taxis = st.session_state["selected_taxis"]
 else:
-    selected_taxis = ['yellow', 'green']
+    selected_taxis = ["yellow", "green"]
 
-if 'selected_years' in st.session_state and st.session_state['selected_years']:
-    selected_years = st.session_state['selected_years']
+if "selected_years" in st.session_state and st.session_state["selected_years"]:
+    selected_years = st.session_state["selected_years"]
 else:
     selected_years = [2025]
 
@@ -102,19 +109,30 @@ avg_rev_per_trip = (total_revenue / total_trips) if total_trips > 0 else 0
 col1, col2, col3, col4 = st.columns(4)
 
 with col1:
-    st.markdown("<small style='color:gray;'>🚗 TOTAL TRIP CARRIED</small>", unsafe_allow_html=True)
+    st.markdown(
+        "<small style='color:gray;'>🚗 TOTAL TRIP CARRIED</small>",
+        unsafe_allow_html=True,
+    )
     st.header(f"{total_trips:,}")
 
 with col2:
-    st.markdown("<small style='color:gray;'>💰 TOTAL GROSS REVENUE</small>", unsafe_allow_html=True)
+    st.markdown(
+        "<small style='color:gray;'>💰 TOTAL GROSS REVENUE</small>",
+        unsafe_allow_html=True,
+    )
     st.header(f"${total_revenue:,.2f}")
 
 with col3:
-    st.markdown("<small style='color:gray;'>💵 TOTAL DRIVER TIPS</small>", unsafe_allow_html=True)
+    st.markdown(
+        "<small style='color:gray;'>💵 TOTAL DRIVER TIPS</small>",
+        unsafe_allow_html=True,
+    )
     st.header(f"${total_tips:,.2f}")
 
 with col4:
-    st.markdown("<small style='color:gray;'>⚡ AVG REV / TRIP</small>", unsafe_allow_html=True)
+    st.markdown(
+        "<small style='color:gray;'>⚡ AVG REV / TRIP</small>", unsafe_allow_html=True
+    )
     st.header(f"${avg_rev_per_trip:,.2f}")
 
 st.markdown("<div style='height:1rem'></div>", unsafe_allow_html=True)
@@ -139,31 +157,45 @@ with col_left:
 
     shares = []
 
-    if 'yellow' in selected_taxis and share_data:
-        shares.append({'Jenis Taksi': 'Yellow Cab', 'Trips': share_data[0], 'Revenue': share_data[2]})
+    if "yellow" in selected_taxis and share_data:
+        shares.append(
+            {
+                "Jenis Taksi": "Yellow Cab",
+                "Trips": share_data[0],
+                "Revenue": share_data[2],
+            }
+        )
 
-    if 'green' in selected_taxis and share_data:
-        shares.append({'Jenis Taksi': 'Green Cab', 'Trips': share_data[1], 'Revenue': share_data[3]})
+    if "green" in selected_taxis and share_data:
+        shares.append(
+            {
+                "Jenis Taksi": "Green Cab",
+                "Trips": share_data[1],
+                "Revenue": share_data[3],
+            }
+        )
 
     df_share = pd.DataFrame(shares)
 
-    if not df_share.empty and df_share['Trips'].sum() > 0:
+    if not df_share.empty and df_share["Trips"].sum() > 0:
         fig_donut = px.pie(
             df_share,
-            values='Revenue',
-            names='Jenis Taksi',
+            values="Revenue",
+            names="Jenis Taksi",
             hole=0.5,
-            color='Jenis Taksi',
-            color_discrete_map=WARNA_TAKSI
+            color="Jenis Taksi",
+            color_discrete_map=WARNA_TAKSI,
         )
 
         fig_donut.update_layout(
             showlegend=True,
-            legend=dict(orientation="h", yanchor="bottom", y=-0.2, xanchor="center", x=0.5),
+            legend=dict(
+                orientation="h", yanchor="bottom", y=-0.2, xanchor="center", x=0.5
+            ),
             margin=dict(t=10, b=10, l=10, r=10),
             height=320,
-            paper_bgcolor='rgba(0,0,0,0)',
-            plot_bgcolor='rgba(0,0,0,0)'
+            paper_bgcolor="rgba(0,0,0,0)",
+            plot_bgcolor="rgba(0,0,0,0)",
         )
 
         st.plotly_chart(fig_donut, use_container_width=True)
@@ -189,7 +221,11 @@ with col_right:
     df_monthly = con.execute(query_monthly).df()
 
     if not df_monthly.empty:
-        df_monthly['Periode'] = df_monthly['year'].astype(str) + '-' + df_monthly['month'].astype(str).str.zfill(2)
+        df_monthly["Periode"] = (
+            df_monthly["year"].astype(str)
+            + "-"
+            + df_monthly["month"].astype(str).str.zfill(2)
+        )
 
         if "yellow" in selected_taxis and "green" in selected_taxis:
             rev_color = "#4B7FF2"
@@ -200,18 +236,18 @@ with col_right:
 
         fig_monthly = px.bar(
             df_monthly,
-            x='Periode',
-            y='revenue',
-            labels={'revenue': 'Revenue ($)', 'Periode': 'Bulan'},
-            text_auto='.2s',
-            color_discrete_sequence=[rev_color]
+            x="Periode",
+            y="revenue",
+            labels={"revenue": "Revenue ($)", "Periode": "Bulan"},
+            text_auto=".2s",
+            color_discrete_sequence=[rev_color],
         )
 
         fig_monthly.update_layout(
             margin=dict(t=20, b=10, l=10, r=10),
             height=320,
-            paper_bgcolor='rgba(0,0,0,0)',
-            plot_bgcolor='rgba(0,0,0,0)'
+            paper_bgcolor="rgba(0,0,0,0)",
+            plot_bgcolor="rgba(0,0,0,0)",
         )
 
         st.plotly_chart(fig_monthly, use_container_width=True)
@@ -257,18 +293,21 @@ with st.container(border=True, key="overview_trip_trend_card"):
                 y_col, color, y_label = "yellow_trips", "#F8B320", "Yellow Cab Trips"
             else:
                 y_col, color, y_label = "green_trips", "#31C28E", "Green Cab Trips"
-                
+
             import plotly.graph_objects as go
+
             fig_trip = go.Figure()
-            fig_trip.add_trace(go.Bar(
-                x=df_trip_monthly["Periode"],
-                y=df_trip_monthly[y_col],
-                marker_color=color,
-                text=df_trip_monthly[y_col].apply(
-                    lambda x: f"{x/1e6:.1f}M" if x >= 1e6 else f"{x/1e3:.0f}K"
-                ),
-                textposition="outside"
-            ))
+            fig_trip.add_trace(
+                go.Bar(
+                    x=df_trip_monthly["Periode"],
+                    y=df_trip_monthly[y_col],
+                    marker_color=color,
+                    text=df_trip_monthly[y_col].apply(
+                        lambda x: f"{x / 1e6:.1f}M" if x >= 1e6 else f"{x / 1e3:.0f}K"
+                    ),
+                    textposition="outside",
+                )
+            )
             fig_trip.update_layout(
                 xaxis_title="Bulan",
                 yaxis_title=y_label,
@@ -297,7 +336,7 @@ SELECT
 FROM dim_taxi_type
 """).df()
 
-df_taxi_info['Tipe'] = df_taxi_info['Tipe'].str.upper()
+df_taxi_info["Tipe"] = df_taxi_info["Tipe"].str.upper()
 
 st.dataframe(df_taxi_info, use_container_width=True, hide_index=True)
 

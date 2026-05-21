@@ -223,7 +223,7 @@ st.caption(
     "Atur kondisi di bawah untuk mensimulasikan estimasi harga — berdasarkan pola historis 2025."
 )
 
-# ── Simulator kondisi ─────────────────────────────────────────────────────────
+# Simulator kondisi
 sim_c1, sim_c2, sim_c3 = st.columns(3)
 
 with sim_c1:
@@ -270,8 +270,8 @@ df_weather = pd.DataFrame(
     }
 )
 
-# ── PETA PER HARI ─────────────────────────────────────────────────────
-# ── Load zone coords ──────────────────────────────────────────────────────────
+# PETA PER HARI─
+# Load zone coords
 zone_coords_path = ROOT / "data" / "raw" / "zone_coords.csv"
 
 if not zone_coords_path.exists():
@@ -281,7 +281,7 @@ if not zone_coords_path.exists():
 zone_coords = pd.read_csv(zone_coords_path)
 
 
-# ── Definisi fungsi di LUAR blok if, dengan decorator cache ──────────────────
+# Definisi fungsi di LUAR blok if, dengan decorator cache
 @st.cache_data(ttl=3600)
 def get_zone_hist(taxi_type_filter, _year_str):
     return (
@@ -320,7 +320,7 @@ def green_color(ratio):
     return f"#{max(0, r):02x}{max(0, g):02x}{max(0, b):02x}"
 
 
-# ── Peta prediksi harga per zona ─────────────────────────────────────────────
+# Peta prediksi harga per zona
 if df_weather is not None and not df_weather.empty:
     # Pakai kondisi dari baris pertama (semua baris identik karena dari simulator)
     day_weather = df_weather.iloc[0]
@@ -349,7 +349,7 @@ if df_weather is not None and not df_weather.empty:
     # Bangun peta Folium
     m = folium.Map(location=[40.7128, -74.0060], zoom_start=11, tiles="cartodbpositron")
 
-    all_predicted = []  # kumpulkan semua prediksi dulu untuk global min/max
+    all_predicted = []
 
     # Pass 1 — hitung prediksi semua taxi, simpan hasilnya
     taxi_results = []
@@ -406,7 +406,7 @@ if df_weather is not None and not df_weather.empty:
 
     st_folium(m, width=1300, height=480, returned_objects=[], key="map_simulator")
 
-    # Ringkasan harga prediksi — UI sama dengan metric di atas
+    # Ringkasan harga prediksi UI sama dengan metric di atas
     if not df_all.empty:
         cl1, cl2, cl3 = st.columns(3)
         cl1.metric("🟢 Termurah", f"${df_all['predicted_price'].min():.2f}")

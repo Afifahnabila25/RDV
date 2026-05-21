@@ -38,7 +38,7 @@ ROOT = Path(__file__).resolve().parents[2]
 DB_PATH = ROOT / "data" / "final" / "warehouse.duckdb"
 con = duckdb.connect(str(DB_PATH), read_only=True)
 
-# ── Filter dari session_state ─────────────────────────────────────────────────
+# Filter dari session_state
 if "selected_taxis" in st.session_state and st.session_state["selected_taxis"]:
     selected_taxis = [
         t.lower().replace(" cab", "") for t in st.session_state["selected_taxis"]
@@ -54,9 +54,7 @@ else:
 taxi_str = "('" + "','".join(selected_taxis) + "')"
 year_str = "(" + ",".join(map(str, selected_years)) + ")"
 
-# ══════════════════════════════════════════════════════════════════════════════
-# BARIS 1 — TOTAL PENDAPATAN PER WILAYAH + TOP 10 ZONA
-# ══════════════════════════════════════════════════════════════════════════════
+# BARIS 1 TOTAL PENDAPATAN PER WILAYAH + TOP 10 ZONA
 col1, col2 = st.columns([1, 1], gap="large")
 
 with col1:
@@ -142,9 +140,7 @@ with col2:
 
 st.divider()
 
-# ══════════════════════════════════════════════════════════════════════════════
-# BARIS 2 — PETA KEPADATAN FULL WIDTH
-# ══════════════════════════════════════════════════════════════════════════════
+# BARIS 2 PETA KEPADATAN FULL WIDTH
 st.subheader("🗺️ Peta Kepadatan Pickup NYC")
 st.caption("Ukuran titik menunjukkan jumlah trip yang berangkat dari tiap zona.")
 try:
@@ -202,9 +198,7 @@ except Exception as e:
 
 st.divider()
 
-# ══════════════════════════════════════════════════════════════════════════════
-# BARIS 3 — REVENUE PER TRIP + RATA-RATA JARAK
-# ══════════════════════════════════════════════════════════════════════════════
+# BARIS 3 REVENUE PER TRIP + RATA-RATA JARAK
 st.subheader("🚕 Revenue per Trip: Yellow vs Green")
 st.caption("Perbandingan rata-rata pendapatan per perjalanan antar jenis taksi.")
 try:

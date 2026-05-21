@@ -29,12 +29,14 @@ gdf = gpd.read_file("data/raw/taxi_zones/taxi_zones/taxi_zones.shp")
 
 # Hitung centroid tiap zona
 gdf = gdf.to_crs(epsg=4326)  # konversi ke lat/lon
-gdf['lat'] = gdf.geometry.centroid.y
-gdf['lon'] = gdf.geometry.centroid.x
+gdf["lat"] = gdf.geometry.centroid.y
+gdf["lon"] = gdf.geometry.centroid.x
 
 print(f"Total zona: {len(gdf)}")
 
 # Simpan ke CSV
 output = Path("data/raw/zone_coords.csv")
-gdf[['LocationID', 'lat', 'lon']].rename(columns={'LocationID': 'location_id'}).to_csv(output, index=False)
+gdf[["LocationID", "lat", "lon"]].rename(columns={"LocationID": "location_id"}).to_csv(
+    output, index=False
+)
 print(f"Tersimpan di {output}")

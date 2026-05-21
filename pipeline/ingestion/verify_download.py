@@ -6,15 +6,15 @@ print("=" * 50)
 print("VERIFIKASI HASIL DOWNLOAD TLC DATA")
 print("=" * 50)
 
-# ── 1. Hitung jumlah file ──────────────────────────
-yellow_files = sorted(glob.glob('data/raw/yellow/*.parquet'))
-green_files  = sorted(glob.glob('data/raw/green/*.parquet'))
+# 1. Hitung jumlah file
+yellow_files = sorted(glob.glob("data/raw/yellow/*.parquet"))
+green_files = sorted(glob.glob("data/raw/green/*.parquet"))
 
 print(f"\n[1] JUMLAH FILE")
 print(f"    Yellow : {len(yellow_files)} file")
 print(f"    Green  : {len(green_files)} file")
 
-# ── 2. List semua file yang ada ────────────────────
+# 2. List semua file yang ada
 print(f"\n[2] DAFTAR FILE YELLOW")
 for f in yellow_files:
     size_mb = Path(f).stat().st_size / (1024 * 1024)
@@ -25,7 +25,7 @@ for f in green_files:
     size_mb = Path(f).stat().st_size / (1024 * 1024)
     print(f"    {Path(f).name}  ({size_mb:.1f} MB)")
 
-# ── 3. Cek sampel isi file ─────────────────────────
+# 3. Cek sampel isi file─
 print(f"\n[4] CEK SAMPEL FILE")
 
 for label, files in [("Yellow", yellow_files), ("Green", green_files)]:
