@@ -63,7 +63,7 @@ else:
 if 'selected_years' in st.session_state and st.session_state['selected_years']:
     selected_years = st.session_state['selected_years']
 else:
-    selected_years = [2024, 2025]
+    selected_years = [2025]
 
 taxi_str = "('" + "','".join(selected_taxis) + "')"
 year_str = "(" + ",".join(map(str, selected_years)) + ")"
@@ -210,6 +210,80 @@ with col_right:
         st.plotly_chart(fig_monthly, use_container_width=True)
 
 st.markdown("<div style='height:0.5rem'></div>", unsafe_allow_html=True)
+
+# ══════════════════════════════════════════════════════════════════════════════
+# TREN TRIP BULANAN
+# ══════════════════════════════════════════════════════════════════════════════
+st.markdown("<div style='height:0.5rem'></div>", unsafe_allow_html=True)
+
+with st.container(border=True, key="overview_trip_trend_card"):
+    st.markdown("### 🚗 Tren Trip Bulanan")
+    st.caption("Volume perjalanan taksi per bulan")
+
+    try:
+        df_trip_monthly = con.execute(f"""
+            SELECT
+                t.year,
+                t.month,
+                COUNT(*) AS total_trips,
+                SUM(CASE WHEN f.taxi_type = 'yellow' THEN 1 ELSE 0 END) AS yellow_trips,
+                SUM(CASE WHEN f.taxi_type = 'green'  THEN 1 ELSE 0 END) AS green_trips
+            FROM fact_trips f
+            JOIN dim_time t ON f.trip_date = t.date
+            WHERE t.year IN {year_str}
+              AND f.taxi_type IN {taxi_str}
+            GROUP BY t.year, t.month
+            ORDER BY t.year, t.month
+        """).df()
+
+        if not df_trip_monthly.empty:
+            df_trip_monthly["Periode"] = (
+                df_trip_monthly["year"].astype(str)
+                + "-"
+                + df_trip_monthly["month"].astype(str).str.zfill(2)
+            )
+
+            trip_view = st.radio(
+                "Tampilkan:",
+                ["Semua", "Yellow Cab", "Green Cab"],
+                horizontal=True,
+                key="trip_trend_view"
+            )
+
+            if trip_view == "Yellow Cab":
+                y_col, color, y_label = "yellow_trips", "#F8B320", "Yellow Cab Trips"
+            elif trip_view == "Green Cab":
+                y_col, color, y_label = "green_trips", "#31C28E", "Green Cab Trips"
+            else:
+                y_col, color, y_label = "total_trips", "#4B7FF2", "Total Trips"
+
+            import plotly.graph_objects as go
+            fig_trip = go.Figure()
+            fig_trip.add_trace(go.Bar(
+                x=df_trip_monthly["Periode"],
+                y=df_trip_monthly[y_col],
+                marker_color=color,
+                text=df_trip_monthly[y_col].apply(
+                    lambda x: f"{x/1e6:.1f}M" if x >= 1e6 else f"{x/1e3:.0f}K"
+                ),
+                textposition="outside"
+            ))
+            fig_trip.update_layout(
+                xaxis_title="Bulan",
+                yaxis_title=y_label,
+                margin=dict(t=20, b=10, l=10, r=10),
+                height=320,
+                paper_bgcolor="rgba(0,0,0,0)",
+                plot_bgcolor="rgba(0,0,0,0)",
+                font=dict(family="Poppins, sans-serif", color="#1E2A3A"),
+                xaxis=dict(gridcolor="#F0F2F5"),
+                yaxis=dict(gridcolor="#F0F2F5"),
+            )
+            st.plotly_chart(fig_trip, use_container_width=True)
+        else:
+            st.info("Data trip bulanan tidak ditemukan.")
+    except Exception as e:
+        st.error(f"Gagal memuat tren trip: {e}")
 
 st.markdown("### ℹ️ Fleet Metadata")
 st.caption("Detail klasifikasi operasional dan wilayah jangkauan resmi")

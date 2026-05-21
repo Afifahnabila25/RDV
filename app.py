@@ -129,6 +129,7 @@ hr { border-color: #E2E6ED !important; }
 )
 
 # ── Filter Global (Sidebar) ───────────────────────────────────────────────────
+# ── Filter Global (Sidebar) ───────────────────────────────────────────────────
 st.sidebar.title("Filter Dashboard")
 
 taxi_options = {"Yellow Cab": "yellow", "Green Cab": "green"}
@@ -138,41 +139,21 @@ selected_taxi_labels = st.sidebar.multiselect(
     default=list(taxi_options.keys()),
     key="global_taxi",
 )
-st.session_state["taxi_str"] = (
-    "('" + "','".join([taxi_options[l] for l in selected_taxi_labels]) + "')"
-)
 
-import duckdb
-from pathlib import Path
+selected_taxis = [taxi_options[l] for l in selected_taxi_labels]
 
-ROOT = Path(__file__).resolve().parent
-DB_PATH = ROOT / "data" / "final" / "warehouse.duckdb"
+# Simpan KEDUA format — taxi_str untuk halaman lain, selected_taxis untuk overview
+st.session_state["taxi_str"]      = "('" + "','".join(selected_taxis) + "')"
+st.session_state["selected_taxis"] = selected_taxis
 
-try:
-    con = duckdb.connect(str(DB_PATH), read_only=True)
-    available_years = [
-        int(r[0])
-        for r in con.execute(
-            "SELECT DISTINCT year FROM dim_time ORDER BY year"
-        ).fetchall()
-        if r[0] is not None
-    ]
-    con.close()
-except:
-    available_years = [2023, 2024, 2025]
+# Tahun hardcode 2025 — tidak perlu filter
+st.session_state["year_str"]       = "(2025)"
+st.session_state["selected_years"] = [2025]
 
-selected_years = st.sidebar.multiselect(
-    "Tahun",
-    options=available_years,
-    default=available_years,
-    key="global_year",
-)
-st.session_state["year_str"] = "(" + ",".join(map(str, selected_years)) + ")"
-
-if not selected_taxi_labels or not selected_years:
-    st.warning("Pilih minimal satu Jenis Taksi dan Tahun.")
+if not selected_taxi_labels:
+    st.warning("Pilih minimal satu Jenis Taksi.")
     st.stop()
-
+    
 # ── Navigasi ──────────────────────────────────────────────────────────────────
 pg = st.navigation(
     [

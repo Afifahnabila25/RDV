@@ -374,7 +374,160 @@ if df_weather is not None and not df_weather.empty:
         hide_index=True
     )
 
+# ── PETA PER HARI ─────────────────────────────────────────────────────
+# ── Load zone coords ──────────────────────────────────────────────────────────
+zone_coords_path = ROOT / "data" / "raw" / "zone_coords.csv"
+
+if not zone_coords_path.exists():
+    st.warning("File zone_coords.csv tidak ditemukan.")
+    st.stop()
+
+zone_coords = pd.read_csv(zone_coords_path)
+
+# ── Definisi fungsi di LUAR blok if, dengan decorator cache ──────────────────
+@st.cache_data(ttl=3600)
+def get_zone_hist(taxi_type_filter, _year_str):
+    return (
+        con.execute(f"""
+            SELECT
+                f.PULocationID AS location_id,
+                l.zone_name,
+                l.borough,
+                AVG(f.trip_distance)    AS avg_distance,
+                AVG(f.duration_minutes) AS avg_duration
+            FROM fact_trips f
+            JOIN dim_location l ON f.PULocationID = l.location_id
+            WHERE f.trip_distance > 0
+              AND f.duration_minutes BETWEEN 1 AND 120
+              AND f.taxi_type = '{taxi_type_filter}'
+              AND YEAR(f.trip_date) IN {_year_str}
+            GROUP BY f.PULocationID, l.zone_name, l.borough
+        """)
+        .df()
+        .merge(zone_coords, on="location_id", how="left")
+        .dropna(subset=["lat", "lon"])
+    )
+
+def yellow_color(ratio):
+    r = 255
+    g = int(220 - ratio * 130)
+    b = int(50  - ratio * 50)
+    return f"#{r:02x}{max(0,g):02x}{max(0,b):02x}"
+
+def green_color(ratio):
+    r = int(50  - ratio * 30)
+    g = int(200 - ratio * 100)
+    b = int(80  - ratio * 50)
+    return f"#{max(0,r):02x}{max(0,g):02x}{max(0,b):02x}"
+
+# ── Tab per hari ──────────────────────────────────────────────────────────────
+if df_weather is not None and not df_weather.empty:
+
+    df_weather["is_holiday"] = df_weather["date"].isin(HOLIDAYS).astype(int)
+    df_weather["is_weekend"] = (
+        pd.to_datetime(df_weather["date"]).dt.dayofweek.isin([5, 6]).astype(int)
+    )
+
+    # Tabel ringkasan cuaca
+    weather_display = df_weather[
+        ["date", "temp_mean_c", "precipitation", "is_rainy", "is_snowy", "is_holiday", "is_weekend"]
+    ].copy()
+    weather_display.columns = ["Tanggal", "Suhu", "Hujan(mm)", "Hujan?", "Salju?", "Libur?", "Weekend?"]
+
+    day_tabs = st.tabs([
+        f"📅 {(start_date + timedelta(days=i)).strftime('%a, %d %b')}"
+        for i in range(num_days)
+    ])
+
+    for i, tab in enumerate(day_tabs):
+        with tab:
+            day_weather = df_weather.iloc[i]
+
+            # Metric cuaca hari ini
+            c1, c2, c3, c4 = st.columns(4)
+            c1.metric("🌡️ Suhu",   f"{day_weather['temp_mean_c']:.1f}°C")
+            c2.metric("🌧️ Hujan",  "Ya" if day_weather["is_rainy"] else "Tidak")
+            c3.metric("❄️ Salju",  "Ya" if day_weather["is_snowy"] else "Tidak")
+            label_day = (
+                "Libur"   if day_weather["is_holiday"] else
+                "Weekend" if day_weather["is_weekend"] else
+                "Weekday"
+            )
+            c4.metric("📆 Tipe Hari", label_day)
+
+            # Tentukan layer taksi yang ditampilkan
+            taxi_layers = []
+            if taxi_toggle in ["🚕 Yellow Cab", "🚕🚖 Semua"]:
+                taxi_layers.append(("yellow", yellow_color, "Yellow Cab"))
+            if taxi_toggle in ["🚖 Green Cab", "🚕🚖 Semua"]:
+                taxi_layers.append(("green",  green_color,  "Green Cab"))
+
+            # Bangun peta Folium
+            m = folium.Map(
+                location=[40.7128, -74.0060],
+                zoom_start=11,
+                tiles="cartodbpositron"
+            )
+
+            df_last = pd.DataFrame()
+
+            for taxi_type, color_fn, label in taxi_layers:
+
+                # Ambil histori rata-rata jarak & durasi per zona
+                df_t = get_zone_hist(taxi_type, year_str).copy()
+
+                # Susun input fitur untuk model
+                zone_inputs = pd.DataFrame({
+                    "trip_distance":    df_t["avg_distance"],
+                    "duration_minutes": df_t["avg_duration"],
+                    "temp_mean_c":      day_weather["temp_mean_c"],
+                    "is_rainy":         int(day_weather["is_rainy"]),
+                    "is_snowy":         int(day_weather["is_snowy"]),
+                    "is_holiday":       int(day_weather["is_holiday"]),
+                    "is_weekend":       int(day_weather["is_weekend"]),
+                })
+
+                # Prediksi harga per zona
+                df_t["predicted_price"] = best_fare_model.predict(zone_inputs)
+
+                min_p = df_t["predicted_price"].min()
+                max_p = df_t["predicted_price"].max()
+                df_last = df_t.copy()
+
+                # Offset posisi green cab sedikit agar tidak tumpuk dengan yellow
+                lat_offset = 0.003 if (taxi_type == "green" and taxi_toggle == "🚕🚖 Semua") else 0
+
+                for _, row in df_t.iterrows():
+                    ratio = (row["predicted_price"] - min_p) / (max_p - min_p + 1e-9)
+                    color = color_fn(ratio)
+                    folium.CircleMarker(
+                        location=[row["lat"] + lat_offset, row["lon"]],
+                        radius=7,
+                        color=color,
+                        fill=True,
+                        fill_color=color,
+                        fill_opacity=0.8,
+                        tooltip=(
+                            f"[{label}] {row['zone_name']} ({row['borough']})<br>"
+                            f"Prediksi: ${row['predicted_price']:.2f}<br>"
+                            f"Avg Jarak: {row['avg_distance']:.1f} mil"
+                        )
+                    ).add_to(m)
+
+            st_folium(m, width=1300, height=480, returned_objects=[])
+
+            # Ringkasan harga prediksi hari ini
+            if not df_last.empty:
+                cl1, cl2, cl3 = st.columns(3)
+                cl1.markdown(f"🟡/🟢 Termurah: **${df_last['predicted_price'].min():.2f}**")
+                cl2.markdown(f"⬛ Rata-rata: **${df_last['predicted_price'].mean():.2f}**")
+                cl3.markdown(f"🟠/🌲 Termahal: **${df_last['predicted_price'].max():.2f}**")
+
+else:
+    st.warning("Gagal mengambil data cuaca. Pastikan koneksi internet tersedia.")
+
 st.divider()
+
 
 st.subheader("📍 Prediksi Zona Paling Ramai")
 
